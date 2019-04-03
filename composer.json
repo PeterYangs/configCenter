@@ -1,6 +1,6 @@
 {
     "name": "configure/node",
-    "description": "eee",
+    "description": "配置中心客户端包",
     "type": "library",
     "require": {
     },
