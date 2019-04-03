@@ -5,7 +5,6 @@
  */
 
 namespace Configure;
-require_once '../vendor/autoload.php';
 
 class ConfigureNode
 {
