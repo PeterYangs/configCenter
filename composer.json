@@ -1,0 +1,12 @@
+{
+    "name": "configure/node",
+    "description": "eee",
+    "type": "library",
+    "require": {
+    },
+    "autoload": {
+      "psr-4": {
+        "Configure\\": "src/"
+      }
+    }
+}
