@@ -36,28 +36,20 @@ class ConfigureNode
      * @param $notifyUrl 通知url
      * @return bool|int
      */
-    public function pull($url,$key,$notifyUrl)
+    public function pull($url, $key, $notifyUrl)
     {
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_HEADER, 0);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch,CURLOPT_POST,1);
-        curl_setopt($ch,CURLOPT_POSTFIELDS,[
+        $data = $this->getResult($url, [
             'key' => $key,
             'version' => $this->getVersion()
         ]);
-        $data = curl_exec($ch);
-        curl_close($ch);
 
-        if ($data){
-            $dataArr = json_decode($data,true);
-            if ($dataArr['code'] != 2){
+        if ($data) {
+            $dataArr = json_decode($data, true);
+            if ($dataArr['code'] != 2) {
                 return false;
             }
-            $this->notify($notifyUrl,$key);
-            return $this->save($dataArr['data']['config'],$dataArr['data']['version']);
+            $this->notify($notifyUrl, $key);
+            return $this->save($dataArr['data']['config'], $dataArr['data']['version']);
         }
         return false;
     }
@@ -66,19 +58,34 @@ class ConfigureNode
      * 通知
      * @param $url
      * @param $key
+     * @return bool|string
      */
-    public function notify($url,$key){
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_HEADER, 0);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch,CURLOPT_POST,1);
-        curl_setopt($ch,CURLOPT_POSTFIELDS,[
+    public function notify($url, $key)
+    {
+        return $this->getResult($url, [
             'key' => $key
         ]);
-        curl_exec($ch);
-        curl_close($ch);
+    }
+
+    /**
+     * 发送一个请求
+     * @param $url
+     * @param array $data
+     * @return bool|string
+     */
+    private function getResult($url, $data = [])
+    {
+        $data = http_build_query($data);
+        $opts = array(
+            'http' => array(
+                'method' => 'POST',
+                'header' => "Content-type: application/x-www-form-urlencodedrn" .
+                    "Content-Length: " . strlen($data) . "rn",
+                'content' => $data
+            )
+        );
+        $context = stream_context_create($opts);
+        return file_get_contents($url, false, $context);
     }
 
     /**
@@ -114,7 +121,7 @@ class ConfigureNode
      * @param $version 版本号
      * @return bool|int
      */
-    private function save($data,$version = 0)
+    private function save($data, $version = 0)
     {
         $configure = '';
         foreach ($data as $v) {
@@ -145,7 +152,8 @@ class ConfigureNode
      * 获取本地版本
      * @return string
      */
-    public function getVersion(){
-        return $this->get('version',0);
+    public function getVersion()
+    {
+        return $this->get('version', 0);
     }
 }
