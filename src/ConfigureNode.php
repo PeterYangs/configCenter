@@ -9,37 +9,33 @@ namespace Configure;
 class ConfigureNode
 {
     private $path;
-    private static $obj;
-
-    private function __construct($path)
-    {
-        $this->path = $path;
-    }
+    private $pullUrl;
+    private $key;
+    private $notifyUrl;
 
     /**
-     * 获取实例
-     * @param $path
-     * @return ConfigureNode
+     * ConfigureNode constructor.
+     * @param $path string 配置文件路径
+     * @param $pullUrl string 拉取url
+     * @param $key string 秘钥
+     * @param $notifyUrl string 通知url
      */
-    public static function getInstance($path)
+    public function __construct($path, $pullUrl, $key, $notifyUrl)
     {
-        if (is_null(self::$obj)) {
-            self::$obj = new self($path);
-        }
-        return self::$obj;
+        $this->path = $path;
+        $this->pullUrl = $pullUrl;
+        $this->key = $key;
+        $this->notifyUrl = $notifyUrl;
     }
 
     /**
      * 拉取配置
-     * @param $url 获取配置url
-     * @param $key key
-     * @param $notifyUrl 通知url
      * @return bool|int
      */
-    public function pull($url, $key, $notifyUrl)
+    public function pull()
     {
-        $data = $this->getResult($url, [
-            'key' => $key,
+        $data = $this->getResult($this->pullUrl, [
+            'key' => $this->key,
             'version' => $this->getVersion()
         ]);
 
@@ -48,7 +44,7 @@ class ConfigureNode
             if ($dataArr['code'] != 2) {
                 return false;
             }
-            $this->notify($notifyUrl, $key);
+            $this->notify();
             return $this->save($dataArr['data']['config'], $dataArr['data']['version']);
         }
         return false;
@@ -56,14 +52,12 @@ class ConfigureNode
 
     /**
      * 通知
-     * @param $url
-     * @param $key
      * @return bool|string
      */
-    public function notify($url, $key)
+    public function notify()
     {
-        return $this->getResult($url, [
-            'key' => $key
+        return $this->getResult($this->notifyUrl, [
+            'key' => $this->key
         ]);
     }
 
@@ -90,7 +84,7 @@ class ConfigureNode
 
     /**
      * 读取配置
-     * @param $key 键
+     * @param $key string 键
      * @param string $defValue 默认值
      * @return string
      */
