@@ -84,29 +84,17 @@ class ConfigureNode
 
     /**
      * 读取配置
-     * @param $key string 键
+     * @param $key 键
      * @param string $defValue 默认值
      * @return string
      */
     public function get($key, $defValue = '')
     {
-        if (!file_exists($this->path)) {
+        $data = $this->getAll();
+        if (empty($data) || !isset($data[$key])){
             return $defValue;
         }
-        $data = file_get_contents($this->path);
-        $dataArr = explode(PHP_EOL, $data);
-        if (empty($dataArr)) {
-            return $defValue;
-        }
-        foreach ($dataArr as $v) {
-            if (preg_match('/^' . $key . '=/i', trim($v))) {
-                $vArr = explode('=', $v);
-                if (count($vArr) == 2) {
-                    return $vArr[1];
-                }
-            }
-        }
-        return $defValue;
+        return $data[$key];
     }
 
     /**
@@ -149,5 +137,32 @@ class ConfigureNode
     public function getVersion()
     {
         return $this->get('version', 0);
+    }
+
+    /**
+     * 获取所有配置
+     * @return array
+     */
+    public function getAll(){
+        if (!file_exists($this->path)) {
+            return [];
+        }
+        $data = file_get_contents($this->path);
+        $dataArr = explode(PHP_EOL, $data);
+        if (empty($dataArr)) {
+            return [];
+        }
+        $result = [];
+        foreach ($dataArr as $v) {
+            $v = trim($v);
+            if (empty($v)){
+                continue;
+            }
+            $vArr = explode('=',$v);
+            if (count($vArr) == 2){
+                $result[$vArr[0]] = trim($vArr[1]);
+            }
+        }
+        return $result;
     }
 }
