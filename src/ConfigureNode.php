@@ -156,7 +156,7 @@ PHPDATA;
             return [];
         }
         if (empty($this->data)){
-            $this->data = require_once "{$path}";
+            $this->data = include($path);
         }
         return $this->data;
     }
