@@ -114,7 +114,11 @@ class ConfigureNode
                 $configure .= ','.PHP_EOL . "    '{$v['key']}'" . '=>' . "'{$v['value']}'";
             }
         }
-        $configure .= ','.PHP_EOL . "    'version'" . '=>' . $version;
+        if (empty($configure)){
+            $configure = "    'version'" . '=>' . $version;
+        } else {
+            $configure .= ','.PHP_EOL . "    'version'" . '=>' . $version;
+        }
         $str = <<<PHPDATA
 <?php
 return [
@@ -156,7 +160,7 @@ PHPDATA;
             return [];
         }
         if (empty($this->data)){
-            $this->data = include($path);
+            $this->data = require_once "{$path}";
         }
         return $this->data;
     }
