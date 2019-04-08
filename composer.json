@@ -8,8 +8,5 @@
       "psr-4": {
         "Configure\\": "src/"
       }
-    },
-  "license": [
-    "996-ICU"
-  ]
+    }
 }
