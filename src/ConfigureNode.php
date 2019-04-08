@@ -12,13 +12,14 @@ class ConfigureNode
     private $pullUrl;
     private $key;
     private $notifyUrl;
+    private $data;
 
     /**
      * ConfigureNode constructor.
-     * @param $path string 配置文件路径
-     * @param $pullUrl string 拉取url
-     * @param $key string 秘钥
-     * @param $notifyUrl string 通知url
+     * @param string $path 配置文件路径
+     * @param string $pullUrl 拉取url
+     * @param string $key 秘钥
+     * @param string $notifyUrl 通知url
      */
     public function __construct($path, $pullUrl, $key, $notifyUrl)
     {
@@ -84,7 +85,7 @@ class ConfigureNode
 
     /**
      * 读取配置
-     * @param $key 键
+     * @param string $key 键
      * @param string $defValue 默认值
      * @return string
      */
@@ -99,8 +100,8 @@ class ConfigureNode
 
     /**
      * 保存配置
-     * @param $data 数组配置
-     * @param $version 版本号
+     * @param array $data 数组配置
+     * @param int $version 版本号
      * @return bool|int
      */
     private function save($data, $version = 0)
@@ -108,18 +109,24 @@ class ConfigureNode
         $configure = '';
         foreach ($data as $v) {
             if (empty($configure)) {
-                $configure = $v['key'] . '=' . $v['value'];
+                $configure = "'{$v['key']}'" . '=>' . "'{$v['value']}'";
             } else {
-                $configure .= PHP_EOL . $v['key'] . '=' . $v['value'];
+                $configure .= ','.PHP_EOL . "    '{$v['key']}'" . '=>' . "'{$v['value']}'";
             }
         }
-        $configure .= PHP_EOL . 'version' . '=' . $version;
-        return file_put_contents($this->path, $configure);
+        $configure .= ','.PHP_EOL . "    'version'" . '=>' . $version;
+        $str = <<<PHPDATA
+<?php
+return [
+    {$configure}
+];
+PHPDATA;
+        return file_put_contents($this->path, $str);
     }
 
     /**
      * 检查版本号，相同返回true,不同返回false
-     * @param $version 要检测的版本号
+     * @param int $version 要检测的版本号
      * @return bool
      */
     public function checkVersion($version)
@@ -144,25 +151,13 @@ class ConfigureNode
      * @return array
      */
     public function getAll(){
-        if (!file_exists($this->path)) {
+        $path = realpath($this->path);
+        if (!file_exists($path)) {
             return [];
         }
-        $data = file_get_contents($this->path);
-        $dataArr = explode(PHP_EOL, $data);
-        if (empty($dataArr)) {
-            return [];
+        if (empty($this->data)){
+            $this->data = require_once "{$path}";
         }
-        $result = [];
-        foreach ($dataArr as $v) {
-            $v = trim($v);
-            if (empty($v)){
-                continue;
-            }
-            $vArr = explode('=',$v);
-            if (count($vArr) == 2){
-                $result[$vArr[0]] = trim($vArr[1]);
-            }
-        }
-        return $result;
+        return $this->data;
     }
 }
